@@ -923,8 +923,12 @@ void RB_DrawView( const void *data ) {
 
 	RB_ShowOverdraw();
 
+	HDR_BeforeView(backEnd.viewDef->viewEntitys != NULL,
+		backEnd.viewDef->isSubview || backEnd.viewDef->superView != NULL);
+
 	// render the scene, jumping to the hardware specific interaction renderers
 	RB_STD_DrawView();
+	HDR_DebugStage(backEnd.viewDef->viewEntitys ? "AFTER 3D view" : "AFTER 2D view");
 
 	// restore the context for 2D drawing if we were stubbing it out
 	if ( r_skipRenderContext.GetBool() && backEnd.viewDef->viewEntitys ) {

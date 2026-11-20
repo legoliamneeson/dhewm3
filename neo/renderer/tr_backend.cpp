@@ -439,7 +439,12 @@ static void	RB_SetBuffer( const void *data ) {
 
 	backEnd.frameCount = cmd->frameCount;
 
-	qglDrawBuffer( cmd->buffer );
+	if (HDR_Active()) {
+		qglDrawBuffer(GL_COLOR_ATTACHMENT0);
+	} else {
+		qglDrawBuffer(cmd->buffer);
+	}
+	HDR_BeginFrame();
 
 	// clear screen for debugging
 	// automatically enable this with several other debug tools
@@ -532,7 +537,9 @@ const void	RB_SwapBuffers( const void *data ) {
 		RB_ShowImages();
 	}
 
+	HDR_DebugStage("BEFORE ImGui");
 	D3::ImGuiHooks::EndFrame();
+	HDR_DebugStage("AFTER ImGui");
 
 	int fillAlpha = r_fillWindowAlphaChan.GetInteger();
 	if ( fillAlpha == 1 || (fillAlpha == -1 && glConfig.shouldFillWindowAlpha) )

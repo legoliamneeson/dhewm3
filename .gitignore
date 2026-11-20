@@ -14,3 +14,5 @@
 /.vs*
 
 /neo/CMakeSettings.json
+dist/native-hdr/Launch Native HDR.cmd
+dist/native-hdr/Launch RoE Native HDR.cmd

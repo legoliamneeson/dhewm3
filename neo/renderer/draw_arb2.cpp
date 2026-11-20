@@ -595,6 +595,23 @@ void R_LoadARBProgram( int progIndex ) {
 			"MOV result.color.w, dhewm3tmpres.w;\n" // alpha remains unmodified
 			"\nEND\n\n"; // we add this block right at the end, replacing the original "END" string
 
+		const bool hdrColorProgram = HDR_Requested() && (
+			!idStr::Icmp(progs[progIndex].name, "interaction.vfp") ||
+			!idStr::Icmp(progs[progIndex].name, "environment.vfp") ||
+			!idStr::Icmp(progs[progIndex].name, "bumpyEnvironment.vfp") ||
+			!idStr::Icmp(progs[progIndex].name, "heatHaze.vfp") ||
+			!idStr::Icmp(progs[progIndex].name, "heatHazeWithMask.vfp") ||
+			!idStr::Icmp(progs[progIndex].name, "heatHazeWithMaskAndVertex.vfp") ||
+			!idStr::Icmp(progs[progIndex].name, "arbFP_glasswarp.txt"));
+		if (hdrColorProgram) {
+			extraLines =
+				"MUL dhewm3tmpres.xyz, program.env[21], dhewm3tmpres;\n"
+				"MAX dhewm3tmpres.xyz, dhewm3tmpres, 0.0;\n"
+				"POW result.color.x, dhewm3tmpres.x, program.env[21].w;\n"
+				"POW result.color.y, dhewm3tmpres.y, program.env[21].w;\n"
+				"POW result.color.z, dhewm3tmpres.z, program.env[21].w;\n"
+				"MOV result.color.w, dhewm3tmpres.w;\nEND\n";
+		}
 		int fullLen = strlen( start ) + strlen( tmpres ) + strlen( extraLines );
 		char* outStr = (char*)_alloca( fullLen + 1 );
 

@@ -27,6 +27,7 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 #include "sys/sys_sdl.h"
+#include "sys/win32/hdr_cursor.h"
 
 #if SDL_VERSION_ATLEAST(3, 0, 0)
   // backwards-compat with SDL2
@@ -115,6 +116,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 static SDL_Window *window = NULL;
+static NativeHDRCursor hdrCursor;
 static SDL_GLContext context = NULL;
 #else
 static SDL_Surface *window = NULL;
@@ -183,6 +185,28 @@ bool GLimp_Init(glimpParms_t parms) {
 	common->Printf("Initializing OpenGL subsystem\n");
 
 	assert(SDL_WasInit(SDL_INIT_VIDEO));
+
+#if defined(_WIN32)
+	// This executable owns HDR presentation. Load the system GL driver explicitly
+	// so a game-folder ReShade opengl32.dll cannot inject a second HDR pipeline
+	// (or prevent this x64 executable from starting when that DLL is x86).
+	static bool nativeGLLoaded = false;
+	if (!nativeGLLoaded) {
+		char nativeGLPath[MAX_PATH] = {};
+		if (GetSystemDirectoryA(nativeGLPath, sizeof(nativeGLPath)) == 0) return false;
+		SDL_strlcat(nativeGLPath, "\\opengl32.dll", sizeof(nativeGLPath));
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+		if (!SDL_GL_LoadLibrary(nativeGLPath)) {
+#else
+		if (SDL_GL_LoadLibrary(nativeGLPath) != 0) {
+#endif
+			common->Warning("Could not load system OpenGL: %s", SDL_GetError());
+			return false;
+		}
+		nativeGLLoaded = true;
+	}
+#endif
+
 
 	My_SDL_WindowFlags flags = SDL_WINDOW_OPENGL;
 
@@ -1108,6 +1132,11 @@ GLimp_Shutdown
 */
 void GLimp_Shutdown() {
 
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+	hdrCursor.Update(window, false);
+#endif
+
+	HDR_Shutdown();
 	D3::ImGuiHooks::Shutdown();
 
 	common->Printf("Shutting down OpenGL subsystem\n");
@@ -1131,6 +1160,7 @@ GLimp_SwapBuffers
 ===================
 */
 void GLimp_SwapBuffers() {
+	if (HDR_Present()) return;
 	D3P_BeginCPUSample(SDL_GL_SwapWindow);
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	SDL_GL_SwapWindow(window);
@@ -1250,6 +1280,11 @@ void GLimp_GrabInput(int flags) {
 		common->Warning("GLimp_GrabInput called without window");
 		return;
 	}
+#if defined(_WIN32) && SDL_VERSION_ATLEAST(2, 0, 0)
+	const bool parkHDRCursor = HDR_Active() && (flags & GRAB_HIDECURSOR) && (flags & GRAB_RELATIVEMOUSE);
+	// Release the corner before SDL restores the absolute/menu cursor position.
+	if (!parkHDRCursor) hdrCursor.Update(window, false);
+#endif
 #if SDL_VERSION_ATLEAST(3, 0, 0)
 	if (flags & GRAB_HIDECURSOR) {
 		SDL_HideCursor();
@@ -1283,6 +1318,22 @@ void GLimp_GrabInput(int flags) {
 	// ignore GRAB_GRABMOUSE, SDL1.2 doesn't support grabbing without relative mode
 	// so only grab if we want relative mode
 	SDL_WM_GrabInput( (flags & GRAB_RELATIVEMOUSE) ? SDL_GRAB_ON : SDL_GRAB_OFF );
+#endif
+#if defined(_WIN32) && SDL_VERSION_ATLEAST(2, 0, 0)
+	if (hdrCursor.Update(window, parkHDRCursor)) {
+		static bool loggedCursorPark = false;
+		if (!loggedCursorPark) {
+			RECT clip = {};
+			POINT cursor = {};
+			if (GetClipCursor(&clip) && GetCursorPos(&cursor)
+				&& clip.right - clip.left == 1 && clip.bottom - clip.top == 1
+				&& cursor.x == clip.left && cursor.y == clip.top) {
+				common->Printf("Native HDR: verified hidden raw-input cursor and SDR box parked bottom-right; cursor (%ld,%ld), clip (%ld,%ld)-(%ld,%ld).\n",
+					cursor.x, cursor.y, clip.left, clip.top, clip.right, clip.bottom);
+				loggedCursorPark = true;
+			}
+		}
+	}
 #endif
 }
 

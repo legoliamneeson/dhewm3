@@ -548,6 +548,8 @@ if(WIN32)
 
 	set(sys_libs ${sys_libs}
 		winmm
+		d3d11
+		dxgi
 		iphlpapi
 		wsock32
 		ole32
@@ -1256,6 +1258,7 @@ elseif(WIN32)
 
 	set(src_sys_core
 		sys/glimp.cpp
+		sys/win32/native_hdr.cpp
 	)
 
 	if(TOOLS)
@@ -1326,6 +1329,11 @@ if(CORE)
 		${src_editor_tools}
 	)
 	
+	if(WIN32)
+		# The native HDR presenter uses C++11 even with IMGUI disabled.
+		set_property(TARGET ${DHEWM3BINARY} PROPERTY CXX_STANDARD 11)
+	endif()
+
 	if(MSVC AND CMAKE_MAJOR_VERSION GREATER 3 OR ( CMAKE_MAJOR_VERSION EQUAL 3 AND CMAKE_MINOR_VERSION GREATER_EQUAL 6 ))
 		# CMake >= 3.6 supports setting the default project started for debugging (instead of trying to launch ALL_BUILD ...)
 		set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${DHEWM3BINARY})

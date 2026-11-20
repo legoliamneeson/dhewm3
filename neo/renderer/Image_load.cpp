@@ -1923,8 +1923,27 @@ void idImage::CopyFramebuffer( int x, int y, int imageWidth, int imageHeight, bo
 	GetDownsize( imageWidth, imageHeight );
 	GetDownsize( potWidth, potHeight );
 
-	qglReadBuffer( GL_BACK );
+	qglReadBuffer(HDR_Active() ? GL_COLOR_ATTACHMENT0 : GL_BACK);
 
+	if (HDR_Active()) {
+		if (internalFormat != GL_RGBA16F || uploadWidth != potWidth || uploadHeight != potHeight) {
+			uploadWidth = potWidth;
+			uploadHeight = potHeight;
+			internalFormat = GL_RGBA16F;
+			qglTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, potWidth, potHeight, 0, GL_RGBA, GL_FLOAT, NULL);
+			// Vanilla RGB screen copies sample alpha as one. Preserve that contract.
+			qglTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_ONE);
+		}
+		qglCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, x, y, imageWidth, imageHeight);
+		if (imageWidth != potWidth) qglCopyTexSubImage2D(GL_TEXTURE_2D, 0, imageWidth, 0, x + imageWidth - 1, y, 1, imageHeight);
+		if (imageHeight != potHeight) qglCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, imageHeight, x, y + imageHeight - 1, imageWidth, 1);
+		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		backEnd.c_copyFrameBuffer++;
+		return;
+	}
 	// only resize if the current dimensions can't hold it at all,
 	// otherwise subview renderings could thrash this
 	if ( ( useOversizedBuffer && ( uploadWidth < potWidth || uploadHeight < potHeight ) )
@@ -1991,7 +2010,7 @@ void idImage::CopyDepthbuffer( int x, int y, int imageWidth, int imageHeight, bo
 	GetDownsize( imageWidth, imageHeight );
 	GetDownsize( potWidth, potHeight );
 	// Ensure we are reading from the back buffer:
-	qglReadBuffer( GL_BACK );
+	qglReadBuffer(HDR_Active() ? GL_COLOR_ATTACHMENT0 : GL_BACK);
 	// only resize if the current dimensions can't hold it at all,
 	// otherwise subview renderings could thrash this
 	if ( ( useOversizedBuffer && ( uploadWidth < potWidth || uploadHeight < potHeight ) ) || ( !useOversizedBuffer && ( uploadWidth != potWidth || uploadHeight != potHeight ) ) )

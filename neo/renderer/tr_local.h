@@ -31,6 +31,7 @@ If you have questions concerning this license or the applicable additional terms
 
 class idScreenRect; // yay for include recursion
 
+#include "renderer/native_hdr.h"
 #include "renderer/Image.h"
 #include "renderer/Interaction.h"
 #include "renderer/MegaTexture.h"

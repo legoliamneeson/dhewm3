@@ -1651,6 +1651,22 @@ static CVarOption videoOptionsImmediately[] = {
 		AddCVarOptionTooltips( cvar, descr );
 	} ),
 	CVarOption( "r_windowResizable", "Make dhewm3 window resizable", OT_BOOL ),
+#if defined(_WIN32)
+	CVarOption("Native HDR / PsychoV35 (Windows HDR must be on)"),
+	CVarOption("r_hdr", "Native HDR (restart video after changing)", OT_BOOL),
+	CVarOption("r_hdrPeakNits", "HDR display peak (nits)", OT_FLOAT, 80, 4000),
+	CVarOption("r_hdrGameNits", "HDR game white (nits)", OT_FLOAT, 48, 500),
+	CVarOption("r_hdrUINits", "HDR HUD / menu white (nits)", OT_FLOAT, 48, 500),
+	CVarOption("r_hdrExposure", "PsychoV35 exposure", OT_FLOAT, 0.1f, 4),
+	CVarOption("r_hdrContrast", "PsychoV35 contrast", OT_FLOAT, 0.1f, 2),
+	CVarOption("r_hdrSaturation", "HDR saturation", OT_FLOAT, 0, 2),
+	CVarOption("r_hdrCompression", "PsychoV35 compression (0 = auto)", OT_FLOAT, 0, 4),
+	CVarOption("r_hdrConeResponse", "PsychoV35 cone response", OT_FLOAT, 0.1f, 4),
+	CVarOption("r_hdrPurity", "PsychoV35 purity", OT_FLOAT, 0, 4),
+	CVarOption("r_hdrGamutCompression", "PsychoV35 gamut compression", OT_FLOAT, 0, 1),
+	CVarOption("r_hdrGamut", "HDR target gamut (0 = BT.709, 1 = BT.2020)", OT_INT, 0, 1),
+	CVarOption("Legacy rendering / SDR"),
+#endif
 	CVarOption( "r_brightness", "Brightness", OT_FLOAT, 0.5f, 2.0f ),
 	CVarOption( "r_gamma", "Gamma", OT_FLOAT, 0.5f, 3.0f ),
 	CVarOption( "r_gammaInShader", "Apply gamma and brightness in shaders", OT_BOOL ),

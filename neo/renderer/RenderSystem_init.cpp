@@ -1369,7 +1369,7 @@ void R_ReadTiledPixels( int width, int height, byte *buffer, renderView_t *ref =
 				//     (at least with XWayland on GNOME changing resolutions is wonky when not doing this)
 				GLint oldReadBuf = GL_BACK;
 				qglGetIntegerv( GL_READ_BUFFER, &oldReadBuf );
-				qglReadBuffer( GL_FRONT );
+				qglReadBuffer(HDR_Active() ? GL_COLOR_ATTACHMENT0 : GL_FRONT);
 
 				qglReadPixels( 0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, temp );
 
