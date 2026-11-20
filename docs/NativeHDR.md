@@ -5,6 +5,12 @@ with PsychoV35 before screen-space GUI rendering, then presents linear scRGB
 through an engine-owned D3D11/DXGI flip swapchain. No ReShade or RenoDX addon
 is required. The GLSL tonemapper comes from the user's RenoDX Doom 3 mod.
 
+## Credits
+
+**PsychoV35 tonemapping: ShortFuse and Musa.**
+
+Existing RenoDX, shader copyright, and license notices are retained.
+
 ## Installing the Windows x64 package
 
 1. Enable **Use HDR** in Windows for the display on which the game will run.

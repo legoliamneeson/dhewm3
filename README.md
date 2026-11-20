@@ -22,6 +22,13 @@ For dhewm3 I will try to fix those issues in the next update, if that's even pos
 As far as I know the the vulnerabilities are currently not publicly known or actively exploited.
 I wouldn't bet on that though...
 
+# NATIVE HDR IN THIS FORK
+
+This fork adds native HDR output with PsychoV35 tonemapping and a hidden-cursor
+corner fix. See [Native HDR setup and controls](docs/NativeHDR.md).
+
+**PsychoV35 tonemapping credit: ShortFuse and Musa.**
+
 # ABOUT
 
 _dhewm 3_ is a _Doom 3_ GPL source port, known to work on at least Windows, Linux, macOS and FreeBSD.
